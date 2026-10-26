@@ -1,0 +1,4 @@
+#!/bin/bash
+
+[[ $1 ]] && log_count=$1 || log_count=10
+git log -n $log_count --pretty=format:"%C(bold cyan)%h%C(reset) · %C(bold red)%aN%C(reset) · %C(white)%ar%C(reset) · %s%C(bold green)%d%C(reset)" | sed 's/ · /∫/g' | sed 's/$/\n/' | column -t -s '∫'

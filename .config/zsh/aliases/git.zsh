@@ -1,0 +1,6 @@
+alias gc="git-cleanup"
+alias gf="git-fresh"
+alias gp="git-pretty-print"
+alias gr="git-rebase-origin-head-branch"
+alias gsu="git submodule update --init --recursive"
+alias s="stree"

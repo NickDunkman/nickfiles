@@ -1,0 +1,61 @@
+# Recipes for `nickfiles <recipe>`. Recipe names must not collide with git subcommands,
+# because anything that isn't a recipe gets passed through to git.
+
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+nickfiles := env_var("HOME") / ".local/bin/nickfiles"
+
+# Install & update everything. Safe to re-run any time.
+setup:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    # some installers (e.g. .pkg casks) need sudo: ask once, then keep it alive until setup exits
+    sudo -v
+    while true; do sudo -n true; sleep 50; kill -0 "$$" || exit; done 2>/dev/null &
+    echo "==> Pulling the latest nickfiles"
+    if ! "{{nickfiles}}" pull --ff-only; then
+      echo "⚠️  couldn't fast-forward nickfiles; continuing with what's checked out" >&2
+    fi
+    # run the rest in a new `just` process, so a justfile that was just pulled takes effect
+    exec just --justfile "{{justfile()}}" --working-directory "$HOME" _setup
+
+[private]
+_setup: brew zsh
+    @just --justfile "{{justfile()}}" --working-directory "$HOME" _checklist
+
+# Install & upgrade everything in ~/.Brewfile
+brew:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    echo "==> Homebrew"
+    brew update
+    # keep going if some entries fail (e.g. App Store apps before signing in to the App Store)
+    if ! brew bundle --global; then
+      echo "⚠️  some Brewfile entries failed to install (see above)" >&2
+    fi
+    brew upgrade
+    outdated_apps=$(mas outdated 2>/dev/null || true)
+    if [ -n "$outdated_apps" ]; then
+      echo "there are app store apps to upgrade! requires password ..."
+      mas upgrade || echo "⚠️  couldn't upgrade App Store apps" >&2
+    fi
+
+# Pre-download zsh plugins, so the first new shell starts fast
+zsh:
+    @echo "==> zsh plugins"
+    SHELL_SESSIONS_DISABLE=1 zsh -i -c exit
+
+[private]
+_checklist:
+    #!/usr/bin/env bash
+    items=()
+    if [ "${TERM_PROGRAM:-}" = "Apple_Terminal" ]; then
+      items+=("Quit Terminal and open iTerm2")
+    fi
+    if [ ${#items[@]} -eq 0 ]; then
+      echo "✅ nickfiles setup complete"
+    else
+      echo
+      echo "✅ nickfiles setup complete. Still to do by hand:"
+      for item in "${items[@]}"; do echo "   • $item"; done
+    fi

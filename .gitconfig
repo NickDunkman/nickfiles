@@ -1,0 +1,24 @@
+[alias]
+	b = branch
+	co = checkout
+	commit-tree = commit-tree -S
+[core]
+	pager = less -F -X
+	excludesfile = ~/.gitignore_global
+[mailmap]
+	file = ~/.mailmap
+[user]
+	name = Nick Dunkman
+	email = nickdunkman@gmail.com
+	signingkey = 6E98D8371DDEC882
+[pull]
+	ff = only
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
+[commit]
+	template = ~/.stCommitMsg
+	gpgsign = true

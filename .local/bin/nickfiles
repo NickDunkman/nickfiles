@@ -1,0 +1,43 @@
+#!/bin/sh
+# nickfiles: one command for my dotfiles.
+#
+#   nickfiles <recipe> ...   runs a recipe from ~/.config/nickfiles/justfile (e.g. `nickfiles setup`)
+#   nickfiles <anything> ... runs git against the bare repo in ~/.nickfiles, with $HOME as the work tree
+#   nickfiles                lists the recipes and shows `git status`
+
+NICKFILES_GIT_DIR="${NICKFILES_GIT_DIR:-$HOME/.nickfiles}"
+NICKFILES_DIR="${NICKFILES_DIR:-$HOME/.config/nickfiles}"
+JUSTFILE="$NICKFILES_DIR/justfile"
+export NICKFILES_GIT_DIR NICKFILES_DIR
+
+nickfiles_git() {
+  git --git-dir="$NICKFILES_GIT_DIR" --work-tree="$HOME" "$@"
+}
+
+nickfiles_just() {
+  just --justfile "$JUSTFILE" --working-directory "$HOME" "$@"
+}
+
+if [ $# -eq 0 ]; then
+  nickfiles_just --list
+  echo
+  nickfiles_git status --short --branch
+  exit
+fi
+
+# the work tree is $HOME, so `git clean` could delete everything in it
+if [ "$1" = clean ]; then
+  echo "nickfiles: refusing to run 'git clean' against \$HOME" >&2
+  exit 1
+fi
+
+if command -v just >/dev/null 2>&1 && [ -f "$JUSTFILE" ]; then
+  for recipe in $(nickfiles_just --summary 2>/dev/null); do
+    if [ "$recipe" = "$1" ]; then
+      nickfiles_just "$@"
+      exit
+    fi
+  done
+fi
+
+nickfiles_git "$@"

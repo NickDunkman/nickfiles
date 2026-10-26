@@ -1,0 +1,82 @@
+#!/bin/bash
+
+program_name=$(basename "$0")
+
+# colors for output
+green_fg=$(tput setaf 2)
+red_fg=$(tput setaf 1)
+reset=$(tput sgr0)
+
+function fatal_error {
+    printf "\n$program_name: ${red_fg}FATAL: $1$reset\n" 1>&2
+    exit 1
+}
+
+which git > /dev/null
+if [ $? -ne 0 ]; then
+    fatal_error 'git is not installed.'
+fi
+
+inside_git_repo=$(git rev-parse --is-inside-work-tree 2>/dev/null)
+if [ ! $inside_git_repo ]; then
+    fatal_error "not in a git directory"
+fi
+
+head_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+if [ -z $head_branch ]; then
+    fatal_error "could not parse a \$merge_branch"
+fi
+
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+usage="
+\"$program_name\" rebases against the origin/$head_branch branch!
+
+usage: for normal rebasing $current_branch onto origin/$head_branch:
+
+    $program_name [help|-h|--help]
+
+usage: when $current_branch was branched off another branch which was squash-merged into origin/$head_branch, do this to avoid unnecessary conflicts:
+
+    $program_name <last-commit-sha1-in-the-squashed-branch>
+"
+
+# Optional first positional argument: git SHA
+squashed_sha=""
+if [[ $# -gt 0 && "$1" =~ ^[0-9a-fA-F]{7,40}$ ]]; then
+  squashed_sha="$1"
+  shift
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help|help)
+      echo "$usage"
+      exit 0
+      ;;
+    --*=*)
+      option_name=${1%%=*}
+      fatal_error "invalid option: $option_name"
+      ;;
+    -*)
+      fatal_error "invalid option: $1"
+      ;;
+    *)
+      fatal_error "unexpected argument: $1"
+      ;;
+  esac
+  shift
+done
+
+
+# There cannot be any uncommitted changes on current branch. Untracked files are allowed.
+git diff --quiet HEAD
+if [ $? -ne 0 ]; then
+    fatal_error "you have uncommitted changes, aborting"
+fi
+
+if [ -n "$squashed_sha" ]; then
+  git rebase --rebase-merges --onto origin/$head_branch $squashed_sha
+else
+  git rebase --rebase-merges origin/$head_branch
+fi

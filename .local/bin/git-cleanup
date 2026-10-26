@@ -1,0 +1,303 @@
+#!/bin/bash
+
+program_name=$(basename "$0")
+
+# colors for output
+green_fg=$(tput setaf 2)
+red_fg=$(tput setaf 1)
+reset=$(tput sgr0)
+
+function fatal_error {
+    printf "\n$program_name: ${red_fg}FATAL: $1$reset\n" 1>&2
+    exit 1
+}
+
+which git > /dev/null
+if [ $? -ne 0 ]; then
+    fatal_error 'git is not installed.'
+fi
+
+inside_git_repo=$(git rev-parse --is-inside-work-tree 2>/dev/null)
+if [ ! $inside_git_repo ]; then
+    fatal_error "not in a git directory"
+fi
+
+merge_branch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
+if [ -z $merge_branch ]; then
+    fatal_error "could not parse a \$merge_branch"
+fi
+
+usage="
+usage: $program_name [help|-h|--help]
+
+Description:
+
+    \"$program_name\" simplifies the process of cleaning up your local
+    git repository with the following process:
+
+    1. Fetch changes to remote branches on GitHub. Your local branches
+       are *not* updated, only remote refs such as origin/$merge_branch.
+    2. Prune remote branches that have been deleted from GitHub.
+    3. Delete local branches that have been merged into the
+       \"origin/$merge_branch\" branch on GitHub. The branch will *not* be
+       deleted if it has only been merged to your local \"$merge_branch\" branch.
+    4. If you were on a branch that was not deleted, you remain on that
+       branch. Otherwise, you will switch to the \"$merge_branch\" branch.
+
+Requirements:
+
+    1. Git must be installed
+    2. You must be inside a git directory
+    3. You cannot have any uncommitted changes. Untracked files are fine.
+    4. If you cannot connect to GitHub, the program will abort without
+       causing any damage.
+
+Tip: add an alias to your bash profile:
+
+    alias '$program_name'='${BASH_SOURCE[0]}'
+"
+
+#######################################################################
+# Process Options
+#######################################################################
+
+for option in $@
+do
+    case $option in
+      -h|--help|help)
+          echo "$usage"
+          exit 0
+          ;;
+      *)
+          option_name=${option/=*/""}
+          fatal_error "invalid option: $option_name"
+    esac
+done
+
+#######################################################################
+# Validation
+#######################################################################
+
+# $merge_branch must exist locally & on origin
+git show-ref --verify --quiet refs/heads/$merge_branch
+if [ $? -ne 0 ]; then
+    fatal_error "\"$merge_branch\" branch does not exist"
+fi
+git ls-remote --exit-code ./. origin/$merge_branch > /dev/null
+if [ $? -ne 0 ]; then
+    fatal_error "\"origin/$merge_branch\" branch does not exist"
+fi
+
+# There cannot be any uncommitted changes on current branch. Untracked files are allowed.
+git diff --quiet HEAD
+if [ $? -ne 0 ]; then
+    fatal_error "you have uncommitted changes, aborting"
+fi
+
+#######################################################################
+# Store name of branch currently checked out
+#######################################################################
+
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+#######################################################################
+# Pull remote branches
+#######################################################################
+
+printf "\nFetching ... "
+git fetch > /tmp/git_cleanup_output 2>&1
+test=$(cat /tmp/git_cleanup_output | grep "fatal: Could not read from remote repository")
+if [ $? -eq 0 ]; then
+    fatal_error "could not connect to GitHub"
+fi
+
+index=0
+while read line
+do
+    if [[ $line =~ "->" ]]; then
+        fetches[$index]=$line
+        index=$(expr $index + 1)
+    fi
+done < /tmp/git_cleanup_output
+
+num_fetches=${#fetches[@]}
+if [ $num_fetches -eq 0 ]; then
+    printf "no changes found on GitHub.\n"
+else
+    for ((i=0; i<$num_fetches; i++))
+    do
+        printf "\n    $green_fg"
+        if [[ ${fetches[i]} =~ "[new branch]" ]]; then
+            branch=${fetches[i]/*-> /""}
+            printf "[new branch] $branch"
+        else
+            commits=${fetches[i]/ */""}
+            branch=${fetches[i]/*-> /""}
+            printf "[updated] $branch  (${commits/../ -> })"
+        fi
+        printf "$reset"
+    done
+    printf "\n"
+fi
+
+#######################################################################
+# Prune remote branches deleted on GitHub
+#######################################################################
+
+printf "\nPruning remote branches ... "
+git fetch --prune > /tmp/git_cleanup_output 2>&1
+test=$(cat /tmp/git_cleanup_output | grep "fatal: Could not read from remote repository")
+if [ $? -eq 0 ]; then
+    fatal_error "could not connect to GitHub"
+fi
+
+index=0
+while read line
+do
+    if [[ $line =~ "[deleted]" ]]; then
+        prunes[$index]=${line/*-> /""}
+        index=$(expr $index + 1)
+    fi
+done < /tmp/git_cleanup_output
+
+num_prunes=${#prunes[@]}
+if [ $num_prunes -eq 0 ]; then
+    printf "no branches deleted from GitHub.\n"
+else
+    for ((i=0; i<$num_prunes; i++))
+    do
+        printf "\n    $red_fg[pruned] ${prunes[i]}$reset"
+    done
+    printf "\n"
+fi
+
+#######################################################################
+# Delete local branches that've been merged into origin/$merge_branch
+#######################################################################
+
+printf "\nLooking for branches that have been merged into origin/$merge_branch ... "
+
+# checkout origin/$merge_branch instead of $merge_branch. This ensures
+# we only delete local branches that have actually been pushed to GitHub,
+# and also prevents us from having to deal with commits on $merge_branch
+# that have not been pushed to GitHub yet.
+git checkout origin/$merge_branch > /dev/null 2>&1
+
+# send list of merged branches into temp file
+git branch --merged > /tmp/git_cleanup_output 2>&1
+
+# also do best effort of detecting branches that have been squash-merged
+# (currently, this only works when $merge_branch does not have any new changes after the squash-merge)
+for branch in $(git for-each-ref --format='%(refname:short)' refs/heads/)
+do
+    if [[ $branch != $merge_branch ]] && [[ $branch != "main" ]] && [[ $branch != "master" ]]; then
+        git diff --color=never `git merge-base origin/$merge_branch $branch`..$branch | git apply --reverse --check &> /dev/null && echo $branch >> /tmp/git_cleanup_output
+    fi
+done
+
+deletions=false
+merge_branch_merged=false
+while read line
+do
+    is_real_branch=`git show-ref refs/heads/$line`
+    if [ -n "$is_real_branch" ] && [[ $line != $merge_branch ]] && [[ $line != "main" ]] && [[ $line != "master" ]]; then
+        git branch -D $line > /dev/null 2>&1
+        printf "\n    $red_fg[deleted] $line$reset"
+        deletions=true
+    elif [[ $line == $merge_branch ]]; then
+        merge_branch_merged=true
+    fi
+done < /tmp/git_cleanup_output
+if ! $deletions; then
+    printf "none found.\n"
+else
+    printf "\n"
+fi
+
+#######################################################################
+# Update $merge_branch if it has been merged to origin/$merge_branch
+#######################################################################
+
+if $merge_branch_merged; then
+    origin_commit=$(git rev-parse origin/$merge_branch)
+    local_commit=$(git rev-parse $merge_branch)
+    if [ $origin_commit != $local_commit ]; then
+        printf "\n'$merge_branch' branch can be fast forwarded ... "
+        git checkout $merge_branch > /dev/null 2>&1
+        git merge origin/$merge_branch > /dev/null 2>&1
+        printf "done.\n"
+    fi
+fi
+
+#######################################################################
+# Switch back to a branch
+#######################################################################
+
+git show-ref --verify --quiet refs/heads/$current_branch
+if [ $? -ne 0 ]; then
+    git checkout $merge_branch > /dev/null 2>&1
+    printf "\nSwitched to branch $green_fg'$merge_branch'$reset. You were on '$current_branch' but it was deleted.\n"
+else
+    git checkout $current_branch > /dev/null 2>&1
+    printf "\nCurrently on branch $green_fg'$current_branch'$reset.\n"
+fi
+
+#######################################################################
+# File cleanup
+#######################################################################
+
+printf "\nLooking for orphaned .pyc files ... "
+deletions=false
+find . \( -name "*.pyc" -o -name "*.py" -type f \) -and \( -not -path "*/.venv/*" \) > /tmp/git_cleanup_output 2>&1
+while read line
+do
+    # For all the .pyc files we found, check if there are zero matching .py files. If so, remove
+    # the .pyc file.
+    if [[ $line =~ \.pyc$ ]]; then
+        pyc_path=$line
+
+        # Python3 .pyc files are in a special "__pycache__" directory. Example:
+        # py:  foo/baz/bar.py
+        # pyc: foo/baz/__pycache__/bar.cpython-36.pyc
+        py3_pattern="^(.*\/)__pycache__\/(.*)\.[^\.]+\.pyc"
+        if [[ $pyc_path =~ $py3_pattern ]]; then
+            py_path="${BASH_REMATCH[1]}${BASH_REMATCH[2]}.py"
+        else
+            # If the python3 pattern didn't match, assume it's a python2-style .pyc file, which
+            # just has a "c" on the end of the same path as the py file.
+            py_path=${line:0:${#line}-1}
+        fi
+
+        # if there is no file found at the .py path we built, delete the .pyc file.
+        py_count=$(grep "^$py_path$" < /tmp/git_cleanup_output | wc -l)
+        if [ "$py_count" -eq "0" ]; then
+            rm $pyc_path
+            printf "\n    $red_fg[removed] $pyc_path$reset"
+            deletions=true
+        fi
+    fi
+done < /tmp/git_cleanup_output
+if ! $deletions; then
+    printf "none found.\n"
+else
+    printf "\n"
+fi
+
+# remove all empty directories (except anything in a .git directory)
+find -d . -type d -empty ! -path "*/.git/*" -delete
+
+#######################################################################
+# Git optimization
+#######################################################################
+
+printf "\nRunning git garbage collection (git gc) ... "
+git gc --quiet
+printf "done.\n"
+
+#######################################################################
+# Remove /tmp file
+#######################################################################
+
+rm /tmp/git_cleanup_output
+
+printf "\n"

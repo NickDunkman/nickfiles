@@ -1,0 +1,68 @@
+#!/bin/bash
+
+program_name=$(basename "$0")
+
+# colors for output
+green_fg=$(tput setaf 2)
+red_fg=$(tput setaf 1)
+reset=$(tput sgr0)
+
+function fatal_error {
+    printf "\n$program_name: ${red_fg}FATAL: $1$reset\n" 1>&2
+    exit 1
+}
+
+which git > /dev/null
+if [ $? -ne 0 ]; then
+    fatal_error 'git is not installed.'
+fi
+
+inside_git_repo=$(git rev-parse --is-inside-work-tree 2>/dev/null)
+if [ ! $inside_git_repo ]; then
+    fatal_error "not in a git directory"
+fi
+
+usage="
+usage: $program_name [help|-h|--help]
+
+Description:
+
+    \"$program_name\" recursively removes all untracked files, except
+    for those in this allow list:
+    
+        .env
+        .envrc
+        .storage
+
+Requirements:
+
+    1. Git must be installed
+    2. You must be inside a git directory
+
+Tip: add an alias to your bash profile:
+
+    alias '$program_name'='${BASH_SOURCE[0]}'
+"
+
+#######################################################################
+# Process Options
+#######################################################################
+
+for option in $@
+do
+    case $option in
+      -h|--help|help)
+          echo "$usage"
+          exit 0
+          ;;
+      *)
+          option_name=${option/=*/""}
+          fatal_error "invalid option: $option_name"
+    esac
+done
+
+#######################################################################
+# Do the thing!
+#######################################################################
+ 
+git clean -fdx -e .env -e .envrc -e .storage
