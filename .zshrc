@@ -1,5 +1,9 @@
 export NICKFILES_DIR="$HOME/.config/nickfiles"
 
+# where compinit finds completion functions: my own (e.g. _nickfiles), then Homebrew's (just, git, gh, ...)
+typeset -U fpath
+fpath=($HOME/.config/zsh/functions /opt/homebrew/share/zsh/site-functions $fpath)
+
 export FNM_PATH="/opt/homebrew/opt/fnm/bin"
 if [ -d "$FNM_PATH" ]; then
   eval "$(fnm env --use-on-cd --shell zsh)"

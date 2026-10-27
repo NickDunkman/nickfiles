@@ -1,0 +1,18 @@
+#compdef nickfiles
+# Completion for ~/.local/bin/nickfiles: recipe names first, then git's own completion
+# after `nickfiles git`, pointed at the nickfiles repo (so branches & files come from it).
+
+if (( CURRENT == 2 )); then
+  local -a recipes
+  local line
+  # lines look like "setup # Install & update everything" or "git *args # Run git ..."
+  for line in ${(f)"$(just --justfile ${NICKFILES_DIR:-$HOME/.config/nickfiles}/justfile --list --list-heading '' --list-prefix '' 2>/dev/null)"}; do
+    recipes+=("${line%% *}:${${line#*\# }}")
+  done
+  _describe 'nickfiles recipe' recipes
+elif [[ $words[2] == git ]]; then
+  local -x GIT_DIR=$HOME/.nickfiles GIT_WORK_TREE=$HOME
+  shift words
+  (( CURRENT-- ))
+  _normal
+fi

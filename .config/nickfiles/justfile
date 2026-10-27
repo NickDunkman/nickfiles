@@ -1,7 +1,9 @@
-# Recipes for `nickfiles <recipe>`. Recipe names must not collide with git subcommands,
-# because anything that isn't a recipe gets passed through to git.
+# Recipes for `nickfiles <recipe>`.
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
+
+# pass recipe arguments through as "$@", so quoting survives (e.g. `nickfiles git commit -m "two words"`)
+set positional-arguments
 
 nickfiles := env_var("HOME") / ".local/bin/nickfiles"
 
@@ -13,11 +15,22 @@ setup:
     sudo -v
     while true; do sudo -n true; sleep 50; kill -0 "$$" || exit; done 2>/dev/null &
     echo "==> Pulling the latest nickfiles"
-    if ! "{{nickfiles}}" pull --ff-only; then
+    if ! "{{nickfiles}}" git pull --ff-only; then
       echo "⚠️  couldn't fast-forward nickfiles; continuing with what's checked out" >&2
     fi
     # run the rest in a new `just` process, so a justfile that was just pulled takes effect
     exec just --justfile "{{justfile()}}" --working-directory "$HOME" _setup
+
+# Run git against the nickfiles repo, e.g. `nickfiles git status`
+[no-exit-message]
+git *args:
+    #!/usr/bin/env bash
+    # the work tree is $HOME, so `git clean` could delete everything in it
+    if [ "${1:-}" = clean ]; then
+      echo "nickfiles: refusing to run 'git clean' against \$HOME" >&2
+      exit 1
+    fi
+    exec git --git-dir="$HOME/.nickfiles" --work-tree="$HOME" "$@"
 
 [private]
 _setup: brew zsh

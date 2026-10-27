@@ -18,9 +18,10 @@ nickfiles setup
 
 ## Day to day
 
-`nickfiles` is one command for everything:
+`nickfiles` runs recipes from [`~/.config/nickfiles/justfile`](../.config/nickfiles/justfile):
 
 - `nickfiles setup` installs and updates everything: it pulls the latest nickfiles, then runs every setup step. Re-run it any time.
-- `nickfiles <recipe>` runs any other recipe from [`~/.config/nickfiles/justfile`](../.config/nickfiles/justfile).
-- `nickfiles <git command>` runs git against the bare repo, e.g. `nickfiles status`, `nickfiles add ~/.zshrc`, `nickfiles commit`.
+- `nickfiles git <args>` runs git against the bare repo, e.g. `nickfiles git status`, `nickfiles git add ~/.zshrc`, `nickfiles git commit`.
 - `nickfiles` on its own lists the recipes and shows `git status`.
+
+Tab completion works for recipe names, and for everything after `nickfiles git` (subcommands, branches, and files from this repo).
