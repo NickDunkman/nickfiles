@@ -14,8 +14,6 @@ nickfiles_just() {
 
 if [ $# -eq 0 ]; then
   nickfiles_just --list
-  echo
-  nickfiles_just git status --short --branch
   exit
 fi
 
