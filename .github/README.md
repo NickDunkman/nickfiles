@@ -13,14 +13,14 @@ In Terminal, run this and enter your password once:
 Then open a new terminal tab and run:
 
 ```sh
-nickfiles setup
+nickfiles upstall
 ```
 
 ## Day to day
 
 `nickfiles` runs recipes from [`~/.config/nickfiles/justfile`](../.config/nickfiles/justfile):
 
-- `nickfiles setup` installs and updates everything: it pulls the latest nickfiles, then runs every setup step. Re-run it any time.
+- `nickfiles upstall` installs and updates everything: it pulls the latest nickfiles, then runs every install step. Re-run it any time.
 - `nickfiles git <args>` runs git against the bare repo, e.g. `nickfiles git status`, `nickfiles git add ~/.zshrc`, `nickfiles git commit`.
 - `nickfiles` on its own lists the recipes and shows `git status`.
 

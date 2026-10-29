@@ -5,7 +5,7 @@
 if (( CURRENT == 2 )); then
   local -a recipes
   local line
-  # lines look like "setup # Install & update everything" or "git *args # Run git ..."
+  # lines look like "upstall # Install & update everything" or "git *args # Run git ..."
   for line in ${(f)"$(just --justfile ${NICKFILES_DIR:-$HOME/.config/nickfiles}/justfile --list --list-heading '' --list-prefix '' 2>/dev/null)"}; do
     recipes+=("${line%% *}:${${line#*\# }}")
   done

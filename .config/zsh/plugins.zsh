@@ -1,6 +1,6 @@
-# load the zplug function (installed by `nickfiles setup`, so may be missing on a brand-new machine)
+# load the zplug function (installed by `nickfiles upstall`, so may be missing on a brand-new machine)
 if [[ ! -f /opt/homebrew/opt/zplug/init.zsh ]]; then
-  print -P "%F{yellow}zsh plugins aren't installed yet -- run \`nickfiles setup\`%f"
+  print -P "%F{yellow}zsh plugins aren't installed yet -- run \`nickfiles upstall\`%f"
   return
 fi
 source /opt/homebrew/opt/zplug/init.zsh

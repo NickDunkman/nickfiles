@@ -1,5 +1,5 @@
 #!/bin/bash
-# Get a brand-new Mac ready to run `nickfiles setup`. Safe to re-run.
+# Get a brand-new Mac ready to run `nickfiles upstall`. Safe to re-run.
 #
 #   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/NickDunkman/nickfiles/main/.config/nickfiles/bootstrap.sh)"
 #
@@ -34,7 +34,7 @@ if [ ! -x /opt/homebrew/bin/brew ]; then
 fi
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
-# 3. What `nickfiles setup` needs before the full Brewfile has been installed
+# 3. What `nickfiles upstall` needs before the full Brewfile has been installed
 say "Installing just and uv"
 brew install just uv
 
@@ -51,7 +51,7 @@ nickfiles_git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
 nickfiles_git fetch --quiet origin
 nickfiles_git branch --quiet --set-upstream-to=origin/main main
 
-# 5. Check the files out into $HOME (only the first time -- after that, `nickfiles setup` pulls)
+# 5. Check the files out into $HOME (only the first time -- after that, `nickfiles upstall` pulls)
 if [ -z "$(nickfiles_git ls-files)" ]; then
   say "Checking out nickfiles into $HOME"
   if ! nickfiles_git checkout 2>/dev/null; then
@@ -68,4 +68,4 @@ if [ -z "$(nickfiles_git ls-files)" ]; then
   fi
 fi
 
-say "Bootstrap complete! Open a new terminal tab and run:  nickfiles setup"
+say "Bootstrap complete! Open a new terminal tab and run:  nickfiles upstall"

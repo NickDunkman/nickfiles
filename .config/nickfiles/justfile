@@ -8,10 +8,10 @@ set positional-arguments
 nickfiles := env_var("HOME") / ".local/bin/nickfiles"
 
 # Install & update everything. Safe to re-run any time.
-setup:
+upstall:
     #!/usr/bin/env bash
     set -uo pipefail
-    # some installers (e.g. .pkg casks) need sudo: ask once, then keep it alive until setup exits
+    # some installers (e.g. .pkg casks) need sudo: ask once, then keep it alive until upstall exits
     sudo -v
     while true; do sudo -n true; sleep 50; kill -0 "$$" || exit; done 2>/dev/null &
     echo "==> Pulling the latest nickfiles"
@@ -19,7 +19,7 @@ setup:
       echo "⚠️  couldn't fast-forward nickfiles; continuing with what's checked out" >&2
     fi
     # run the rest in a new `just` process, so a justfile that was just pulled takes effect
-    exec just --justfile "{{justfile()}}" --working-directory "$HOME" _setup
+    exec just --justfile "{{justfile()}}" --working-directory "$HOME" _upstall
 
 # Run git against the nickfiles repo, e.g. `nickfiles git status`
 [no-exit-message]
@@ -33,7 +33,7 @@ git *args:
     exec git --git-dir="$HOME/.nickfiles.git" --work-tree="$HOME" "$@"
 
 [private]
-_setup: brew zsh
+_upstall: brew zsh
     @just --justfile "{{justfile()}}" --working-directory "$HOME" _checklist
 
 # Install & upgrade everything in ~/.Brewfile
@@ -66,9 +66,9 @@ _checklist:
       items+=("Quit Terminal and open iTerm2")
     fi
     if [ ${#items[@]} -eq 0 ]; then
-      echo "✅ nickfiles setup complete"
+      echo "✅ nickfiles upstall complete"
     else
       echo
-      echo "✅ nickfiles setup complete. Still to do by hand:"
+      echo "✅ nickfiles upstall complete. Still to do by hand:"
       for item in "${items[@]}"; do echo "   • $item"; done
     fi
