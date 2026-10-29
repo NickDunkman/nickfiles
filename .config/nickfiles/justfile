@@ -30,7 +30,7 @@ git *args:
       echo "nickfiles: refusing to run 'git clean' against \$HOME" >&2
       exit 1
     fi
-    exec git --git-dir="$HOME/.nickfiles" --work-tree="$HOME" "$@"
+    exec git --git-dir="$HOME/.nickfiles.git" --work-tree="$HOME" "$@"
 
 [private]
 _setup: brew zsh

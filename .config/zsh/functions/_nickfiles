@@ -11,7 +11,7 @@ if (( CURRENT == 2 )); then
   done
   _describe 'nickfiles recipe' recipes
 elif [[ $words[2] == git ]]; then
-  local -x GIT_DIR=$HOME/.nickfiles GIT_WORK_TREE=$HOME
+  local -x GIT_DIR=$HOME/.nickfiles.git GIT_WORK_TREE=$HOME
   shift words
   (( CURRENT-- ))
   _normal

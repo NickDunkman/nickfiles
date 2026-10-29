@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-NICKFILES_GIT_DIR="$HOME/.nickfiles"
+NICKFILES_GIT_DIR="$HOME/.nickfiles.git"
 REPO_HTTPS="https://github.com/NickDunkman/nickfiles.git"
 REPO_SSH="git@github.com:NickDunkman/nickfiles.git"
 

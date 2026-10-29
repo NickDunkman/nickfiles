@@ -1,6 +1,6 @@
 # nickfiles
 
-My dotfiles. This repo is cloned bare into `~/.nickfiles`, with `$HOME` as its work tree. Every file here lives at its real path in my home directory, with no symlinks.
+My dotfiles. This repo is cloned bare into `~/.nickfiles.git`, with `$HOME` as its work tree. Every file here lives at its real path in my home directory, with no symlinks.
 
 ## New Mac
 

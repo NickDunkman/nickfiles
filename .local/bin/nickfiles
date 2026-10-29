@@ -2,7 +2,7 @@
 # nickfiles: one command for my dotfiles. Runs recipes from ~/.config/nickfiles/justfile:
 #
 #   nickfiles setup          install & update everything
-#   nickfiles git <args>     git against the bare repo in ~/.nickfiles, with $HOME as the work tree
+#   nickfiles git <args>     git against the bare repo in ~/.nickfiles.git, with $HOME as the work tree
 #   nickfiles                list the recipes and show `git status`
 
 NICKFILES_DIR="${NICKFILES_DIR:-$HOME/.config/nickfiles}"
