@@ -7,22 +7,17 @@ set positional-arguments
 
 nickfiles := env_var("HOME") / ".local/bin/nickfiles"
 
-# recipes append lines here for things that need doing by hand; `upstall` prints them at the end
-checklist := env_var("HOME") / ".local/state/nickfiles/checklist"
-
 # Install & update everything. Safe to re-run any time.
 [group('installs & updates')]
-upstall: _sudo_keepalive _pull _checklist-reset upstall-brew upstall-zsh-plugins upstall-iterm-settings upstall-python upstall-node upstall-rust upstall-claude upstall-docker
+upstall: _sudo-keepalive _pull upstall-brew upstall-zsh-plugins upstall-iterm-settings upstall-python upstall-node upstall-rust upstall-claude upstall-docker
     #!/usr/bin/env bash
+    echo
+    echo "✅ nickfiles upstall complete"
+    # iTerm2 only reads its prefs at launch
     if [ "${TERM_PROGRAM:-}" = "Apple_Terminal" ]; then
-      echo "Quit Terminal and open iTerm2" >> "{{checklist}}"
-    fi
-    if [ ! -s "{{checklist}}" ]; then
-      echo "✅ nickfiles upstall complete"
+      echo "🚨 Quit Terminal and open iTerm2"
     else
-      echo
-      echo "✅ nickfiles upstall complete. Still to do by hand:"
-      while IFS= read -r item; do echo "   • $item"; done < "{{checklist}}"
+      echo "🚨 Restart iTerm2 (⌘Q, then reopen it) to pick up any iTerm2 & zsh changes"
     fi
 
 # Run git against the nickfiles repo, e.g. `nickfiles git add .some/.file`
@@ -46,13 +41,13 @@ upstall-brew:
     brew update
     # keep going if some entries fail (e.g. App Store apps before signing in to the App Store)
     if ! brew bundle --global; then
-      echo "⚠️  some Brewfile entries failed to install (see above)" >&2
+      echo "⚠️ some Brewfile entries failed to install (see above)" >&2
     fi
     brew upgrade --yes
     outdated_apps=$(mas outdated 2>/dev/null || true)
     if [ -n "$outdated_apps" ]; then
       echo "there are app store apps to upgrade! requires password ..."
-      mas upgrade || echo "⚠️  couldn't upgrade App Store apps" >&2
+      mas upgrade || echo "⚠️ couldn't upgrade App Store apps" >&2
     fi
 
 # Install/update zsh plugins
@@ -77,11 +72,6 @@ upstall-iterm-settings:
     defaults write com.googlecode.iterm2 PrefsCustomFolder -string "$folder"
     defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
     echo "iTerm2 will now load prefs from $folder"
-    # iTerm2 only reads its prefs at launch
-    if pgrep -xq iTerm2; then
-      mkdir -p "$(dirname "{{checklist}}")"
-      echo "Quit iTerm2 with ⌘Q and reopen it, to load your iTerm2 prefs" >> "{{checklist}}"
-    fi
 
 # Install/update python & related tooling
 [group('installs & updates')]
@@ -149,12 +139,12 @@ upstall-docker: upstall-python
 
 # some installers (e.g. .pkg casks) need sudo: ask once, then keep it alive until `just` exits
 [private]
-_sudo_keepalive:
+_sudo-keepalive:
     #!/usr/bin/env bash
     sudo -v
     while true; do sudo -n true; sleep 50; kill -0 "$PPID" || exit; done 2>/dev/null &
 
-# changes to this justfile that get pulled here take effect the next time `upstall` runs
+# pulls down changes to nickfiles from github
 [private]
 _pull:
     #!/usr/bin/env bash
@@ -162,7 +152,3 @@ _pull:
     if ! "{{nickfiles}}" git pull --ff-only; then
       echo "⚠️  couldn't fast-forward nickfiles; continuing with what's checked out" >&2
     fi
-
-[private]
-_checklist-reset:
-    @mkdir -p "$(dirname "{{checklist}}")" && rm -f "{{checklist}}"
