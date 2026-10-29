@@ -9,7 +9,7 @@ nickfiles := env_var("HOME") / ".local/bin/nickfiles"
 
 # Install & update everything. Safe to re-run any time.
 [group('installs & updates')]
-upstall: _sudo-keepalive _pull upstall-brew upstall-zsh-plugins upstall-iterm-settings upstall-python upstall-node upstall-rust upstall-claude upstall-docker
+upstall: _sudo-keepalive _pull upstall-brew upstall-zsh-plugins upstall-iterm-settings upstall-macos-settings upstall-python upstall-node upstall-rust upstall-claude upstall-docker
     #!/usr/bin/env bash
     echo
     echo "✅ nickfiles upstall complete"
@@ -72,6 +72,31 @@ upstall-iterm-settings:
     defaults write com.googlecode.iterm2 PrefsCustomFolder -string "$folder"
     defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
     echo "iTerm2 will now load prefs from $folder"
+
+# Apply my macOS settings (Dock, Finder, keyboard)
+[group('installs & updates')]
+upstall-macos-settings:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> macOS settings"
+
+    # Dock
+    defaults write com.apple.dock autohide -bool true
+    defaults write com.apple.dock tilesize -int 128
+
+    # Finder
+    defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+    defaults write com.apple.finder AppleShowAllFiles -bool true
+    defaults write com.apple.finder FXPreferredViewStyle -string clmv
+    defaults write com.apple.finder _FXSortFoldersFirst -bool false
+    defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+
+    # holding a key in VS Code repeats it instead of showing the accent picker
+    defaults delete -g ApplePressAndHoldEnabled 2>/dev/null || true
+    defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
+
+    # Restart Dock & Finder so they pick up the new settings
+    killall Dock Finder 2>/dev/null || true
 
 # Install/update python & related tooling
 [group('installs & updates')]
