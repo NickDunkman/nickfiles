@@ -80,9 +80,28 @@ upstall-macos-settings:
     set -euo pipefail
     echo "==> macOS settings"
 
+    # Appearance: always dark mode (fully takes effect at the next login)
+    defaults write NSGlobalDomain AppleInterfaceStyle -string Dark
+    defaults write NSGlobalDomain AppleInterfaceStyleSwitchesAutomatically -bool false
+
+    # Clock: always 24-hour time, with seconds
+    defaults write NSGlobalDomain AppleICUForce24HourTime -bool true
+    defaults write com.apple.menuextra.clock ShowAMPM -bool false
+    defaults write com.apple.menuextra.clock ShowSeconds -bool true
+    defaults write com.apple.menuextra.clock FlashDateSeparators -bool false
+
+    # Menu bar
+    defaults -currentHost write com.apple.controlcenter BatteryShowPercentage -bool true
+    defaults write com.apple.Siri StatusMenuVisible -bool false
+    defaults write com.apple.TextInputMenu visible -bool false
+
+    # Default browser: Firefox Developer Edition (macOS asks to confirm the first time)
+    defaultbrowser firefoxdeveloperedition || echo "⚠️  couldn't set the default browser" >&2
+
     # Dock
     defaults write com.apple.dock autohide -bool true
     defaults write com.apple.dock tilesize -int 128
+    defaults write com.apple.dock show-recents -bool false
 
     # Finder
     defaults write NSGlobalDomain AppleShowAllExtensions -bool true
@@ -95,8 +114,8 @@ upstall-macos-settings:
     defaults delete -g ApplePressAndHoldEnabled 2>/dev/null || true
     defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
 
-    # Restart Dock & Finder so they pick up the new settings
-    killall Dock Finder 2>/dev/null || true
+    # Restart the Dock, Finder & menu bar so they pick up the new settings
+    killall Dock Finder ControlCenter 2>/dev/null || true
 
 # Install/update python & related tooling
 [group('installs & updates')]
