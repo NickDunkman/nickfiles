@@ -14,7 +14,6 @@ zplug "plugins/docker", from:oh-my-zsh
 zplug "plugins/docker-compose", from:oh-my-zsh
 zplug "romkatv/powerlevel10k", use:powerlevel10k.zsh-theme
 zplug "MichaelAquilina/zsh-autoswitch-virtualenv"
-zplug "ptavares/zsh-direnv"
 
 # install uninstalled plugins
 zplug check || zplug install
