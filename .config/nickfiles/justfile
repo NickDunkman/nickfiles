@@ -11,18 +11,18 @@ nickfiles := env_var("HOME") / ".local/bin/nickfiles"
 checklist := env_var("HOME") / ".local/state/nickfiles/checklist"
 
 # Install & update everything. Safe to re-run any time.
-upstall:
+upstall: _sudo _pull _checklist-reset brew zsh iterm python node rust claude docker-shell
     #!/usr/bin/env bash
-    set -uo pipefail
-    # some installers (e.g. .pkg casks) need sudo: ask once, then keep it alive until upstall exits
-    sudo -v
-    while true; do sudo -n true; sleep 50; kill -0 "$$" || exit; done 2>/dev/null &
-    echo "==> Pulling the latest nickfiles"
-    if ! "{{nickfiles}}" git pull --ff-only; then
-      echo "⚠️  couldn't fast-forward nickfiles; continuing with what's checked out" >&2
+    if [ "${TERM_PROGRAM:-}" = "Apple_Terminal" ]; then
+      echo "Quit Terminal and open iTerm2" >> "{{checklist}}"
     fi
-    # run the rest in a new `just` process, so a justfile that was just pulled takes effect
-    exec just --justfile "{{justfile()}}" --working-directory "$HOME" _upstall
+    if [ ! -s "{{checklist}}" ]; then
+      echo "✅ nickfiles upstall complete"
+    else
+      echo
+      echo "✅ nickfiles upstall complete. Still to do by hand:"
+      while IFS= read -r item; do echo "   • $item"; done < "{{checklist}}"
+    fi
 
 # Run git against the nickfiles repo, e.g. `nickfiles git status`
 [no-exit-message]
@@ -34,10 +34,6 @@ git *args:
       exit 1
     fi
     exec git --git-dir="$HOME/.nickfiles.git" --work-tree="$HOME" "$@"
-
-[private]
-_upstall: _checklist-reset brew zsh iterm
-    @just --justfile "{{justfile()}}" --working-directory "$HOME" _checklist
 
 # Install & upgrade everything in ~/.Brewfile
 brew:
@@ -82,20 +78,81 @@ iterm:
       echo "Quit iTerm2 with ⌘Q and reopen it, to load your iTerm2 prefs" >> "{{checklist}}"
     fi
 
+# Python (via uv), and upgrade any CLI tools installed with `uv tool install`
+python:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> Python"
+    # `python` & `python3` in ~/.local/bin run this version; projects pin their own (.python-version)
+    version=3.14
+    uv python install "$version" --default --preview-features python-install-default
+    uv python upgrade "$version"
+    uv tool upgrade --all
+
+# Node LTS (via fnm), with corepack (which includes yarn)
+node:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> Node"
+    eval "$(fnm env --shell bash)"
+    lts=$(fnm list-remote --lts --latest | awk '{print $1}')
+    if ! fnm list | grep -q "$lts"; then
+      fnm install "$lts"
+      fnm default "$lts"
+    fi
+    fnm use "$(fnm default)"
+    # to add more global installs, tack them onto this line
+    npm install --global corepack
+    npm update --global
+
+# Rust (via rustup)
+rust:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> Rust"
+    if command -v rustup &>/dev/null; then
+      rustup update
+    else
+      # ~/.cargo/bin is already on PATH (see ~/.config/zsh/path.zsh)
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --no-modify-path
+    fi
+
+# Claude Code CLI
+claude:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> Claude Code"
+    if command -v claude &>/dev/null; then
+      claude update
+    else
+      curl -fsSL https://claude.ai/install.sh | bash
+    fi
+
+# docker-shell (via `uv tool`)
+docker-shell: python
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> docker-shell"
+    if ! command -v docker-shell &>/dev/null; then
+      uv tool install https://github.com/ewdicus/docker-shell/releases/download/v0.1.0/docker_shell-0.1.0-py3-none-any.whl
+    fi
+
+# some installers (e.g. .pkg casks) need sudo: ask once, then keep it alive until `just` exits
+[private]
+_sudo:
+    #!/usr/bin/env bash
+    sudo -v
+    while true; do sudo -n true; sleep 50; kill -0 "$PPID" || exit; done 2>/dev/null &
+
+# changes to this justfile that get pulled here take effect the next time `upstall` runs
+[private]
+_pull:
+    #!/usr/bin/env bash
+    echo "==> Pulling the latest nickfiles"
+    if ! "{{nickfiles}}" git pull --ff-only; then
+      echo "⚠️  couldn't fast-forward nickfiles; continuing with what's checked out" >&2
+    fi
+
 [private]
 _checklist-reset:
     @mkdir -p "$(dirname "{{checklist}}")" && rm -f "{{checklist}}"
-
-[private]
-_checklist:
-    #!/usr/bin/env bash
-    if [ "${TERM_PROGRAM:-}" = "Apple_Terminal" ]; then
-      echo "Quit Terminal and open iTerm2" >> "{{checklist}}"
-    fi
-    if [ ! -s "{{checklist}}" ]; then
-      echo "✅ nickfiles upstall complete"
-    else
-      echo
-      echo "✅ nickfiles upstall complete. Still to do by hand:"
-      while IFS= read -r item; do echo "   • $item"; done < "{{checklist}}"
-    fi
