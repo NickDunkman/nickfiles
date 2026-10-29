@@ -30,6 +30,7 @@ trap 'kill "$sudo_keepalive_pid" 2>/dev/null || true' EXIT
 if [ ! -x /opt/homebrew/bin/brew ]; then
   say "Installing Homebrew and the Xcode Command Line Tools"
   NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  say "Skip Homebrew's \"Next steps\" above -- nickfiles' zsh config already puts Homebrew on your PATH"
 fi
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
