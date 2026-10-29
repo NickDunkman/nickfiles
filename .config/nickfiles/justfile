@@ -11,7 +11,8 @@ nickfiles := env_var("HOME") / ".local/bin/nickfiles"
 checklist := env_var("HOME") / ".local/state/nickfiles/checklist"
 
 # Install & update everything. Safe to re-run any time.
-upstall: _sudo _pull _checklist-reset brew zsh iterm python node rust claude docker-shell
+[group('installs & updates')]
+upstall: _sudo_keepalive _pull _checklist-reset upstall-brew upstall-zsh-plugins upstall-iterm-settings upstall-python upstall-node upstall-rust upstall-claude upstall-docker
     #!/usr/bin/env bash
     if [ "${TERM_PROGRAM:-}" = "Apple_Terminal" ]; then
       echo "Quit Terminal and open iTerm2" >> "{{checklist}}"
@@ -24,8 +25,9 @@ upstall: _sudo _pull _checklist-reset brew zsh iterm python node rust claude doc
       while IFS= read -r item; do echo "   • $item"; done < "{{checklist}}"
     fi
 
-# Run git against the nickfiles repo, e.g. `nickfiles git status`
+# Run git against the nickfiles repo, e.g. `nickfiles git add .some/.file`
 [no-exit-message]
+[group('nickfiles version control')]
 git *args:
     #!/usr/bin/env bash
     # the work tree is $HOME, so `git clean` could delete everything in it
@@ -35,8 +37,9 @@ git *args:
     fi
     exec git --git-dir="$HOME/.nickfiles.git" --work-tree="$HOME" "$@"
 
-# Install & upgrade everything in ~/.Brewfile
-brew:
+# Install/update homebrew & everything in ~/.Brewfile
+[group('installs & updates')]
+upstall-brew:
     #!/usr/bin/env bash
     set -uo pipefail
     echo "==> Homebrew"
@@ -52,13 +55,15 @@ brew:
       mas upgrade || echo "⚠️  couldn't upgrade App Store apps" >&2
     fi
 
-# Pre-download zsh plugins, so the first new shell starts fast
-zsh:
+# Install/update zsh plugins
+[group('installs & updates')]
+upstall-zsh-plugins:
     @echo "==> zsh plugins"
     SHELL_SESSIONS_DISABLE=1 zsh -i -c true
 
-# Load iTerm2's prefs from ~/.config/iterm2
-iterm:
+# Point iTerm2 at my preferences in ~/.config/iterm2
+[group('installs & updates')]
+upstall-iterm-settings:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "==> iTerm2"
@@ -78,8 +83,9 @@ iterm:
       echo "Quit iTerm2 with ⌘Q and reopen it, to load your iTerm2 prefs" >> "{{checklist}}"
     fi
 
-# Python (via uv), and upgrade any CLI tools installed with `uv tool install`
-python:
+# Install/update python & related tooling
+[group('installs & updates')]
+upstall-python:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "==> Python"
@@ -89,8 +95,9 @@ python:
     uv python upgrade "$version"
     uv tool upgrade --all
 
-# Node LTS (via fnm), with corepack (which includes yarn)
-node:
+# Install/update node & related tooling
+[group('installs & updates')]
+upstall-node:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "==> Node"
@@ -105,8 +112,9 @@ node:
     npm install --global corepack
     npm update --global
 
-# Rust (via rustup)
-rust:
+# Install/update rust
+[group('installs & updates')]
+upstall-rust:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "==> Rust"
@@ -118,7 +126,8 @@ rust:
     fi
 
 # Claude Code CLI
-claude:
+[group('installs & updates')]
+upstall-claude:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "==> Claude Code"
@@ -128,8 +137,9 @@ claude:
       curl -fsSL https://claude.ai/install.sh | bash
     fi
 
-# docker-shell (via `uv tool`)
-docker-shell: python
+# Install/update docker-related things, like docker-shell
+[group('installs & updates')]
+upstall-docker: upstall-python
     #!/usr/bin/env bash
     set -euo pipefail
     echo "==> docker-shell"
@@ -139,7 +149,7 @@ docker-shell: python
 
 # some installers (e.g. .pkg casks) need sudo: ask once, then keep it alive until `just` exits
 [private]
-_sudo:
+_sudo_keepalive:
     #!/usr/bin/env bash
     sudo -v
     while true; do sudo -n true; sleep 50; kill -0 "$PPID" || exit; done 2>/dev/null &
