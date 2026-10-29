@@ -1,11 +1,10 @@
-tap "phrase/brewed"
-
 brew "autojump"
 brew "awscli"
+brew "cocoapods"
 brew "coreutils"
-brew "deno"
 brew "direnv"
-brew "firebase-cli"
+brew "fnm"
+brew "fswatch"
 brew "gh"
 brew "git"
 brew "grc"
@@ -15,9 +14,7 @@ brew "libxmlsec1"
 brew "mas"
 brew "mysql"
 brew "openssl"
-brew "phrase"
 brew "pipx"
-brew "postgresql@15"
 brew "pyenv"
 brew "uv"
 brew "watchman"
@@ -27,13 +24,11 @@ cask "1password"
 cask "1password-cli"
 cask "adobe-creative-cloud"
 cask "alfred"
-cask "android-studio"
 cask "anki"
 cask "bluesnooze"
 cask "chatgpt"
 cask "claude"
 cask "cleanshot"
-cask "cursor"
 cask "deepl"
 cask "divvy"
 cask "docker-desktop"
@@ -58,12 +53,9 @@ cask "sourcetree"
 cask "spotify"
 cask "visual-studio-code"
 cask "zoom"
-cask "zulu@17"
 
 mas "ColorSlurp", id: 1287239339
 mas "Drafts", id: 1435957248
 mas "NotePlan - To-Do List & Notes", id: 1505432629
-mas "OpenIn 4 Advanced Link Handler", id: 1643649331
 mas "Speedtest", id: 1153157709
-mas "Transmit", id: 1436522307
 mas "WhatsApp Messenger", id: 310633997
