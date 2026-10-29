@@ -7,6 +7,9 @@ set positional-arguments
 
 nickfiles := env_var("HOME") / ".local/bin/nickfiles"
 
+# recipes append lines here for things that need doing by hand; `upstall` prints them at the end
+checklist := env_var("HOME") / ".local/state/nickfiles/checklist"
+
 # Install & update everything. Safe to re-run any time.
 upstall:
     #!/usr/bin/env bash
@@ -33,7 +36,7 @@ git *args:
     exec git --git-dir="$HOME/.nickfiles.git" --work-tree="$HOME" "$@"
 
 [private]
-_upstall: brew zsh
+_upstall: _checklist-reset brew zsh iterm
     @just --justfile "{{justfile()}}" --working-directory "$HOME" _checklist
 
 # Install & upgrade everything in ~/.Brewfile
@@ -56,19 +59,43 @@ brew:
 # Pre-download zsh plugins, so the first new shell starts fast
 zsh:
     @echo "==> zsh plugins"
-    SHELL_SESSIONS_DISABLE=1 zsh -i -c exit
+    SHELL_SESSIONS_DISABLE=1 zsh -i -c true
+
+# Load iTerm2's prefs from ~/.config/iterm2
+iterm:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> iTerm2"
+    folder="$HOME/.config/iterm2"
+    current_folder=$(defaults read com.googlecode.iterm2 PrefsCustomFolder 2>/dev/null || true)
+    loading=$(defaults read com.googlecode.iterm2 LoadPrefsFromCustomFolder 2>/dev/null || echo 0)
+    if [ "$current_folder" = "$folder" ] && [ "$loading" = 1 ]; then
+      echo "already loading prefs from $folder"
+      exit 0
+    fi
+    defaults write com.googlecode.iterm2 PrefsCustomFolder -string "$folder"
+    defaults write com.googlecode.iterm2 LoadPrefsFromCustomFolder -bool true
+    echo "iTerm2 will now load prefs from $folder"
+    # iTerm2 only reads its prefs at launch
+    if pgrep -xq iTerm2; then
+      mkdir -p "$(dirname "{{checklist}}")"
+      echo "Quit iTerm2 with ⌘Q and reopen it, to load your iTerm2 prefs" >> "{{checklist}}"
+    fi
+
+[private]
+_checklist-reset:
+    @mkdir -p "$(dirname "{{checklist}}")" && rm -f "{{checklist}}"
 
 [private]
 _checklist:
     #!/usr/bin/env bash
-    items=()
     if [ "${TERM_PROGRAM:-}" = "Apple_Terminal" ]; then
-      items+=("Quit Terminal and open iTerm2")
+      echo "Quit Terminal and open iTerm2" >> "{{checklist}}"
     fi
-    if [ ${#items[@]} -eq 0 ]; then
+    if [ ! -s "{{checklist}}" ]; then
       echo "✅ nickfiles upstall complete"
     else
       echo
       echo "✅ nickfiles upstall complete. Still to do by hand:"
-      for item in "${items[@]}"; do echo "   • $item"; done
+      while IFS= read -r item; do echo "   • $item"; done < "{{checklist}}"
     fi
