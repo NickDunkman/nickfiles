@@ -92,6 +92,11 @@ upstall-macos-settings:
 
     # Menu bar
     defaults -currentHost write com.apple.controlcenter BatteryShowPercentage -bool true
+    defaults -currentHost write com.apple.controlcenter Bluetooth -int 2
+    defaults -currentHost write com.apple.controlcenter Sound -int 18
+    defaults -currentHost write com.apple.controlcenter AirDrop -int 8
+    defaults -currentHost write com.apple.controlcenter Display -int 8
+    defaults -currentHost write com.apple.controlcenter Weather -int 8
     defaults write com.apple.Siri StatusMenuVisible -bool false
     defaults write com.apple.TextInputMenu visible -bool false
 
