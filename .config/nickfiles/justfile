@@ -46,7 +46,7 @@ brew:
     if ! brew bundle --global; then
       echo "⚠️  some Brewfile entries failed to install (see above)" >&2
     fi
-    brew upgrade
+    brew upgrade --yes
     outdated_apps=$(mas outdated 2>/dev/null || true)
     if [ -n "$outdated_apps" ]; then
       echo "there are app store apps to upgrade! requires password ..."
