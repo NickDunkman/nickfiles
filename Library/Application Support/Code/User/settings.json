@@ -1,0 +1,71 @@
+{
+  // AI
+  "claudeCode.preferredLocation": "panel",
+  "claudeCode.selectedModel": "opus",
+  "github.copilot.nextEditSuggestions.enabled": true,
+
+  // Theming & Font
+  "editor.fontFamily": "'Monaspace Neon', Consolas, Menlo, Monaco, 'Courier New', monospace",
+  "editor.fontLigatures": "'calt', 'ss02', 'ss07', 'ss08', 'ss09', 'ss10', 'liga'",
+  "editor.fontSize": 14,
+  "editor.fontWeight": 400,
+  "workbench.colorTheme": "Monokai One Dark Vivid",
+
+  // The zoomed out file minimap just hogs screen space—I don't find it useful.
+  "editor.minimap.enabled": false,
+
+  // For the subtle vertical lines that appear to the left of a bracketed block,
+  // when the cursor is inside that block.
+  "editor.guides.bracketPairs": "active",
+  "editor.bracketPairColorization.enabled": true,
+
+  // Enable showing the little color squares next to color values (hexes, etc)
+  // in more file types.
+  "editor.defaultColorDecorators": "always",
+
+  // When copying code from VSCode to other apps, drop the formatting
+  "editor.copyWithSyntaxHighlighting": false,
+
+  // Save files immediately when switching panes in VSCode, which makes it
+  // easier to trigger reformatting by prettier, etc.
+  "files.autoSave": "onFocusChange",
+
+  // Just start new files empty
+  "workbench.editor.empty.hint": "hidden",
+
+  // Hide meta files from the explorer, text search, file search, etc.
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/.pytest_cache": true,
+    "**/.ruff_cache": true,
+  },
+
+  // Don't reveal the file in the explorer sidebar when switching to it. Over
+  // time this opens up the whole tree and makes the explorer hard to use when
+  // you actually need it.
+  "explorer.autoReveal": false,
+
+  // The extra click to delete things is tedious -- usually things can be easily
+  // restored via git.
+  "explorer.confirmDelete": false,
+
+  // Formatting
+  "editor.formatOnSave": true,
+  "files.insertFinalNewline": true,
+  "[typescript][typescriptreact][javascript][javascriptreact][scss][css][postcss][html][markdown][mdx][json][jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.rulers": [80],
+  },
+  "[python]": {
+    "editor.rulers": [100],
+  },
+
+  // Vim mode customizations
+  "vim.leader": ",",
+  "vim.hlsearch": true,
+
+  // This is for the git history info that's placed on lines above each
+  // function, class, etc. I find that it makes it harder to read the code.
+  "gitlens.codeLens.enabled": false,
+}
