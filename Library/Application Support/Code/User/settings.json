@@ -61,6 +61,10 @@
     "editor.rulers": [100],
   },
 
+  // basedpyright is the Python language server, so turn off Pylance's. The
+  // Python extension still handles interpreters, debugging & tests.
+  "python.languageServer": "None",
+
   // Vim mode customizations
   "vim.leader": ",",
   "vim.hlsearch": true,

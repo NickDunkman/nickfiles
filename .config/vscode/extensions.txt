@@ -1,0 +1,30 @@
+# VS Code extensions that `nickfiles upstall-vscode-extensions` installs (one ID per line).
+# Get the IDs of what's installed with `code --list-extensions`.
+anthropic.claude-code
+arcanis.vscode-zipfs
+ashpowell.monokai-one-dark-vivid
+bradlc.vscode-tailwindcss
+charliermarsh.ruff
+csstools.postcss
+dbaeumer.vscode-eslint
+detachhead.basedpyright
+eamodio.gitlens
+esbenp.prettier-vscode
+github.vscode-github-actions
+graphql.vscode-graphql
+johnpapa.vscode-peacock
+mechatroner.rainbow-csv
+ms-azuretools.vscode-containers
+ms-python.python
+nrwl.angular-console
+oderwat.indent-rainbow
+orta.vscode-jest
+redhat.vscode-xml
+redhat.vscode-yaml
+shd101wyy.markdown-preview-enhanced
+skellock.just
+stylelint.vscode-stylelint
+unifiedjs.vscode-mdx
+vitest.explorer
+vscodevim.vim
+yzhang.markdown-all-in-one

@@ -9,7 +9,7 @@ nickfiles := env_var("HOME") / ".local/bin/nickfiles"
 
 # Install & update everything. Safe to re-run any time.
 [group('installs & updates')]
-upstall: _sudo-keepalive _pull upstall-brew upstall-zsh-plugins upstall-iterm-settings upstall-macos-settings upstall-python upstall-node upstall-rust upstall-claude upstall-docker
+upstall: _sudo-keepalive _pull upstall-brew upstall-zsh-plugins upstall-iterm-settings upstall-macos-settings upstall-vscode-extensions upstall-python upstall-node upstall-rust upstall-claude upstall-docker
     #!/usr/bin/env bash
     echo
     echo "✅ nickfiles upstall complete"
@@ -121,6 +121,20 @@ upstall-macos-settings:
 
     # Restart the Dock, Finder & menu bar so they pick up the new settings
     killall Dock Finder ControlCenter 2>/dev/null || true
+
+# Install/update the VS Code extensions in ~/.config/vscode/extensions.txt
+[group('installs & updates')]
+upstall-vscode-extensions:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> VS Code extensions"
+    # extension IDs are case-insensitive, and `code --list-extensions` prints them lowercased
+    wanted=$(grep -v '^#' "$HOME/.config/vscode/extensions.txt" | tr '[:upper:]' '[:lower:]' | sort -u)
+    installed=$(code --list-extensions | tr '[:upper:]' '[:lower:]' | sort -u)
+    for extension in $(comm -23 <(echo "$wanted") <(echo "$installed")); do
+      code --install-extension "$extension"
+    done
+    code --update-extensions
 
 # Install/update python & related tooling
 [group('installs & updates')]
