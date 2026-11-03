@@ -23,7 +23,7 @@ do
 done
 
 # load everything but the path, completion, and aliases files
-for file in ${${${config_files:#*/path.zsh}:#*/completion.zsh}:#*/aliases/*.zsh}
+for file in ${${${config_files:#*/path.zsh}:#*/completion.zsh}:#*/aliases.zsh}
 do
   source $file
 done
@@ -40,9 +40,6 @@ do
 done
 
 # load custom aliases at the end so they override anything set by plugins, for example
-for file in ${(M)config_files:#*/aliases/*.zsh}
-do
-  source $file
-done
+source $HOME/.config/zsh/aliases.zsh
 
 unset config_files
