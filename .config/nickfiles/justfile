@@ -32,7 +32,7 @@ git *args:
     fi
     exec git --git-dir="$HOME/.nickfiles.git" --work-tree="$HOME" "$@"
 
-# Install/update homebrew & everything in ~/.Brewfile
+# Install/update homebrew & everything in ~/.config/homebrew/Brewfile
 [group('installs & updates')]
 upstall-brew:
     #!/usr/bin/env bash
@@ -40,7 +40,7 @@ upstall-brew:
     echo "==> Homebrew"
     brew update
     # keep going if some entries fail (e.g. App Store apps before signing in to the App Store)
-    if ! brew bundle --global; then
+    if ! brew bundle --file="$HOME/.config/homebrew/Brewfile"; then
       echo "⚠️ some Brewfile entries failed to install (see above)" >&2
     fi
     brew upgrade --yes
