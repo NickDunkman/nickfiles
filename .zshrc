@@ -11,35 +11,27 @@ fi
 
 [ -f /opt/homebrew/etc/profile.d/autojump.sh ] && . /opt/homebrew/etc/profile.d/autojump.sh
 
-# grab all .zsh files
-setopt EXTENDED_GLOB
-typeset -U config_files
-config_files=($HOME/.config/zsh/**/*.zsh(N))
+zsh_config_dir=$HOME/.config/zsh
 
-# load the path files
-for file in ${(M)config_files:#*/path.zsh}
-do
-  source $file
-done
+# PATH first, so everything after can find their tools
+source $zsh_config_dir/path.zsh
 
-# load everything but the path, completion, and aliases files
-for file in ${${${config_files:#*/path.zsh}:#*/completion.zsh}:#*/aliases.zsh}
-do
-  source $file
-done
+source $zsh_config_dir/direnv.zsh
+source $zsh_config_dir/grc.zsh
+source $zsh_config_dir/nickfiles.zsh
+source $zsh_config_dir/p10k.zsh
+source $zsh_config_dir/plugins.zsh
+source $zsh_config_dir/python.zsh
+source $zsh_config_dir/vim.zsh
 
-# powerlevel10k prompt config
-[ -f $HOME/.p10k.zsh ] && source $HOME/.p10k.zsh
+# this is included last so that my custom aliases always override
+source $zsh_config_dir/aliases.zsh
 
-# initalize autocomplete and then load every completion.zsh
-autoload -U compinit
-compinit
-for file in ${(M)config_files:#*/completion.zsh}
-do
-  source $file
-done
+# initialize autocomplete. zplug already runs compinit when it loads plugins, so this
+# only runs if the plugins aren't installed yet.
+if (( ! $+functions[compdef] )); then
+  autoload -U compinit
+  compinit
+fi
 
-# load custom aliases at the end so they override anything set by plugins, for example
-source $HOME/.config/zsh/aliases.zsh
-
-unset config_files
+unset zsh_config_dir
