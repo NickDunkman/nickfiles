@@ -1,5 +1,8 @@
 # Loaded last by ~/.zshrc, so these override aliases set by plugins
 
+# shortcut for "cd .."
+alias ".."="cd .."
+
 # git (most of these run scripts in ~/.local/bin)
 alias gc="git-cleanup"
 alias gf="git-fresh"
