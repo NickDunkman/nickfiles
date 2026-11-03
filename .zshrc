@@ -1,8 +1,5 @@
 export NICKFILES_DIR="$HOME/.config/nickfiles"
 
-# so `brew bundle --global` (e.g. `brew bundle cleanup --global`) uses my Brewfile
-export HOMEBREW_BUNDLE_FILE_GLOBAL="$HOME/.config/homebrew/Brewfile"
-
 # where compinit finds completion functions: my own (e.g. _nickfiles), then Homebrew's (just, git, gh, ...)
 typeset -U fpath
 fpath=($HOME/.config/zsh/functions /opt/homebrew/share/zsh/site-functions $fpath)

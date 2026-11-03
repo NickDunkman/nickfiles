@@ -1,1 +1,19 @@
-../.config/claude/settings.json
+{
+  "model": "opus[1m]",
+  "advisorModel": "opus",
+  "permissions": {
+    "allow": ["Bash(npm info:*)", "Bash(npm view:*)"]
+  },
+  "enabledPlugins": {
+    "expo@claude-plugins-official": true,
+    "postman@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "expo-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "expo/skills"
+      }
+    }
+  }
+}
