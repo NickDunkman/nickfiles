@@ -119,6 +119,11 @@ upstall-macos-settings:
     defaults delete -g ApplePressAndHoldEnabled 2>/dev/null || true
     defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
 
+    # Sourcetree: use Homebrew's git instead of its bundled one (needed for SSH commit signing).
+    # Takes effect the next time Sourcetree opens.
+    defaults write com.torusknot.SourceTreeNotMAS gitWhichOne -int 1
+    defaults write com.torusknot.SourceTreeNotMAS gitCustomPath -string /opt/homebrew/bin/git
+
     # Restart the Dock, Finder & menu bar so they pick up the new settings
     killall Dock Finder ControlCenter 2>/dev/null || true
 

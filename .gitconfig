@@ -10,7 +10,8 @@
 [user]
 	name = Nick Dunkman
 	email = nickdunkman@gmail.com
-	signingkey = 6E98D8371DDEC882
+	# public half of the SSH key in 1Password, which signs commits
+	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMHLVGwIjbD7pmMbVYGCzJR5Pb04T8m80DdH8IZwl4go
 [pull]
 	ff = only
 [difftool "sourcetree"]
@@ -20,5 +21,10 @@
 	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
 	trustExitCode = true
 [commit]
-	template = ~/.stCommitMsg
 	gpgsign = true
+[gpg]
+	format = ssh
+[gpg "ssh"]
+	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
+	# lets `git log --show-signature` verify my commits locally
+	allowedSignersFile = ~/.config/git/allowed_signers
