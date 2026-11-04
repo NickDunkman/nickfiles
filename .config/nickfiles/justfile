@@ -9,7 +9,7 @@ nickfiles := env_var("HOME") / ".local/bin/nickfiles"
 
 # Install & update everything. Safe to re-run any time.
 [group('installs & updates')]
-upstall: _sudo-keepalive _pull upstall-brew upstall-zsh-plugins upstall-iterm-settings upstall-macos-settings upstall-vscode-extensions upstall-python upstall-node upstall-rust upstall-claude upstall-docker
+upstall: _sudo-keepalive _pull upstall-brew upstall-secrets upstall-zsh-plugins upstall-iterm-settings upstall-macos-settings upstall-vscode-extensions upstall-python upstall-node upstall-rust upstall-claude upstall-docker
     #!/usr/bin/env bash
     echo
     echo "✅ nickfiles upstall complete"
@@ -49,6 +49,47 @@ upstall-brew:
       echo "there are app store apps to upgrade! requires password ..."
       mas upgrade || echo "⚠️ couldn't upgrade App Store apps" >&2
     fi
+
+# Write the files in the `nickfiles` 1Password vault into ~
+# (each document is titled with its path inside ~, e.g. `.mailmap`)
+[group('installs & updates')]
+upstall-secrets:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "==> Secrets from 1Password"
+    agent_socket="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+    if ! op vault list &>/dev/null || [ ! -S "$agent_socket" ]; then
+      cat >&2 <<'EOF'
+    ⚠️  1Password isn't set up yet, so secrets were skipped. In the 1Password app:
+         1. Sign in
+         2. Settings → Developer → turn on "Integrate with 1Password CLI"
+         3. Settings → Developer → "Set up the SSH Agent" (choose "Use key names")
+       Then run `nickfiles upstall` again.
+    EOF
+      exit 0
+    fi
+    if ! op vault get nickfiles &>/dev/null; then
+      echo "⚠️  there's no \`nickfiles\` vault in 1Password, so secrets were skipped" >&2
+      exit 0
+    fi
+    op document list --vault nickfiles --format json | jq -r '.[].title' | while IFS= read -r path; do
+      # titles are paths inside ~, so refuse anything that could write outside it
+      if [[ $path == /* || $path == *..* ]]; then
+        echo "⚠️  skipping 1Password document \"$path\": its title must be a path inside ~" >&2
+        continue
+      fi
+      target="$HOME/$path"
+      mkdir -p "$(dirname "$target")"
+      new=$(mktemp "$target.XXXXXX")
+      op document get "$path" --vault nickfiles --out-file "$new" --force >/dev/null
+      chmod 600 "$new"
+      if [ -f "$target" ] && cmp -s "$new" "$target"; then
+        rm "$new"
+      else
+        mv "$new" "$target"
+        echo "updated ~/$path"
+      fi
+    done
 
 # Install/update zsh plugins
 [group('installs & updates')]
