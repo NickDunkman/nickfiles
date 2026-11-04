@@ -57,8 +57,10 @@ upstall-secrets:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "==> Secrets from 1Password"
-    agent_socket="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-    if ! op vault list &>/dev/null || [ ! -S "$agent_socket" ]; then
+    # check 1Password's settings directly: if the CLI integration is off, `op` asks to set up an account by hand instead of failing
+    op_dir="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password"
+    op_settings="$op_dir/Library/Application Support/1Password/Data/settings/settings.json"
+    if ! jq -e '."developers.cliSharedLockState.enabled" == true' "$op_settings" &>/dev/null || [ ! -S "$op_dir/t/agent.sock" ]; then
       cat >&2 <<'EOF'
     ⚠️  1Password isn't set up yet, so secrets were skipped. In the 1Password app:
          1. Sign in
