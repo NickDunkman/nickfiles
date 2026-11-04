@@ -10,8 +10,7 @@
 [user]
 	name = Nick Dunkman
 	email = nickdunkman@gmail.com
-	# public half of the SSH key in 1Password, which signs commits
-	signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMHLVGwIjbD7pmMbVYGCzJR5Pb04T8m80DdH8IZwl4go
+	signingkey = 6E98D8371DDEC882
 [pull]
 	ff = only
 [difftool "sourcetree"]
@@ -22,9 +21,3 @@
 	trustExitCode = true
 [commit]
 	gpgsign = true
-[gpg]
-	format = ssh
-[gpg "ssh"]
-	program = /Applications/1Password.app/Contents/MacOS/op-ssh-sign
-	# lets `git log --show-signature` verify my commits locally
-	allowedSignersFile = ~/.config/git/allowed_signers

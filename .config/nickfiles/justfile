@@ -60,15 +60,13 @@ upstall-secrets:
     # `op account list` lists the app's accounts only when the CLI integration is on. (Most other
     # `op` commands ask to set up an account by hand when it's off, instead of failing.)
     accounts=$(op account list --format json 2>/dev/null | jq 'length' 2>/dev/null || echo 0)
-    agent_socket="$HOME/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-    if [ "${accounts:-0}" -eq 0 ] || [ ! -S "$agent_socket" ]; then
+    if [ "${accounts:-0}" -eq 0 ]; then
       cat >&2 <<'EOF'
     ⚠️  1Password isn't set up yet, so secrets were skipped.
          1. System Settings → Privacy & Security → Full Disk Access → turn on iTerm2,
             then quit iTerm2 (⌘Q) & reopen it. Otherwise macOS blocks `op` from reaching the 1Password app.
          2. In the 1Password app, sign in
          3. 1Password → Settings → Developer → turn on "Integrate with 1Password CLI"
-         4. 1Password → Settings → Developer → "Set up the SSH Agent" (choose "Use key names")
        Then run `nickfiles upstall` again.
     EOF
       exit 0
@@ -165,7 +163,7 @@ upstall-macos-settings:
     defaults delete -g ApplePressAndHoldEnabled 2>/dev/null || true
     defaults write com.microsoft.VSCode ApplePressAndHoldEnabled -bool false
 
-    # Sourcetree: use Homebrew's git instead of its bundled one (needed for SSH commit signing).
+    # Sourcetree: use Homebrew's git instead of its bundled one.
     # Takes effect the next time Sourcetree opens.
     defaults write com.torusknot.SourceTreeNotMAS gitWhichOne -int 1
     defaults write com.torusknot.SourceTreeNotMAS gitCustomPath -string /opt/homebrew/bin/git
