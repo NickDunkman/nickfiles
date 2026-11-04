@@ -1,4 +1,4 @@
-# Recipes for `nickfiles <recipe>`. (test)
+# Recipes for `nickfiles <recipe>`.
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
